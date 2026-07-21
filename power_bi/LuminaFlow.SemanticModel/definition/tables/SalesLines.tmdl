@@ -1,0 +1,354 @@
+table SalesLines
+	lineageTag: 47bb0935-8738-41dd-9b3c-17432c6b92f0
+
+	measure 'Net Revenue' = SUM('SalesLines'[NetRevenue])
+		formatString: $ #,##0.00
+		lineageTag: 41574a0c-e3cf-4fc6-9f8e-5dbffcaae05d
+
+	/// Revenue before line discounts; used for reconciliation and tooltips.
+	measure 'Gross Revenue' = SUM('SalesLines'[GrossRevenue])
+		formatString: $ #,##0.00
+		lineageTag: d77d0eaa-94fd-4a87-8496-eddc3ec8a866
+
+	/// Absolute revenue reduction produced by discounts.
+	measure 'Discount Value' = [Gross Revenue] - [Net Revenue]
+		formatString: $ #,##0.00
+		lineageTag: 8a6c9af6-a731-4dfe-90f1-900d6dbc6898
+
+	measure 'Units Sold' = SUM('SalesLines'[Quantity])
+		formatString: #,##0
+		lineageTag: dd833e47-8a08-4567-a3d7-47ff99e93c8d
+
+	measure Orders = DISTINCTCOUNT('SalesLines'[CartId])
+		formatString: #,##0
+		lineageTag: dd057d00-c557-4d6e-ba67-8a52af91d62e
+
+	/// Share of gross revenue removed by discounts, weighted by monetary value.
+	measure 'Weighted Discount Rate' = DIVIDE([Discount Value], [Gross Revenue])
+		formatString: 0.0%
+		lineageTag: 198cba95-c29b-4bee-8c81-6de80373083a
+
+	measure 'Average Order Value' = DIVIDE([Net Revenue], [Orders])
+		formatString: $ #,##0.00
+		lineageTag: 3657c8f8-3854-4bc6-afa1-43d71dc1c19d
+
+	measure 'Active Clients' = DISTINCTCOUNT('SalesLines'[ClientId])
+		formatString: #,##0
+		lineageTag: 312c3460-8b62-4431-8e21-eba19c0c5729
+
+	/// Latest simulated operational month available in the imported snapshot.
+	measure 'Latest Operational Month' = EOMONTH(CALCULATE(MAX('SalesLines'[OrderDate]), REMOVEFILTERS('Calendar')), 0)
+		formatString: MMM yyyy
+		lineageTag: d74cd5a7-3578-44aa-afd5-adfcd305d1da
+
+	measure 'Net Revenue Current Month' =
+			VAR PeriodEnd = [Latest Operational Month]
+			VAR PeriodStart = DATE(YEAR(PeriodEnd), MONTH(PeriodEnd), 1)
+			RETURN CALCULATE([Net Revenue], REMOVEFILTERS('Calendar'), DATESBETWEEN('Calendar'[Date], PeriodStart, PeriodEnd))
+		formatString: $ #,##0.00
+		lineageTag: e5b04a2f-b8ad-467d-97ef-9dd6c9f5d073
+
+	measure 'Net Revenue Previous Month' =
+			VAR PeriodEnd = EOMONTH([Latest Operational Month], -1)
+			VAR PeriodStart = DATE(YEAR(PeriodEnd), MONTH(PeriodEnd), 1)
+			RETURN CALCULATE([Net Revenue], REMOVEFILTERS('Calendar'), DATESBETWEEN('Calendar'[Date], PeriodStart, PeriodEnd))
+		formatString: $ #,##0.00
+		lineageTag: 5650f723-09f9-4068-adc2-c9d62f3870f0
+
+	measure 'Net Revenue MoM' = DIVIDE([Net Revenue Current Month] - [Net Revenue Previous Month], [Net Revenue Previous Month])
+		formatString: ▲ 0.0%;▼ 0.0%;• 0.0%
+		lineageTag: 1cc9787e-5330-482b-a256-8258def5936b
+
+	measure 'Net Revenue MoM Color' = SWITCH(TRUE(), [Net Revenue MoM] > 0, "#178A55", [Net Revenue MoM] < 0, "#D14343", "#66788A")
+		lineageTag: db682202-af93-4963-93ca-e458c6ef9c66
+
+	measure 'Orders Current Month' =
+			VAR PeriodEnd = [Latest Operational Month]
+			VAR PeriodStart = DATE(YEAR(PeriodEnd), MONTH(PeriodEnd), 1)
+			RETURN CALCULATE([Orders], REMOVEFILTERS('Calendar'), DATESBETWEEN('Calendar'[Date], PeriodStart, PeriodEnd))
+		formatString: #,##0
+		lineageTag: 037ed4a3-da6f-4f1a-b86b-d5952593e6f8
+
+	measure 'Orders Previous Month' =
+			VAR PeriodEnd = EOMONTH([Latest Operational Month], -1)
+			VAR PeriodStart = DATE(YEAR(PeriodEnd), MONTH(PeriodEnd), 1)
+			RETURN CALCULATE([Orders], REMOVEFILTERS('Calendar'), DATESBETWEEN('Calendar'[Date], PeriodStart, PeriodEnd))
+		formatString: #,##0
+		lineageTag: 23b68497-ab0c-43f4-ab11-c6bb0872515c
+
+	measure 'Orders MoM' = DIVIDE([Orders Current Month] - [Orders Previous Month], [Orders Previous Month])
+		formatString: ▲ 0.0%;▼ 0.0%;• 0.0%
+		lineageTag: be792161-4694-472d-bf6d-748832f183bd
+
+	measure 'Orders MoM Color' = SWITCH(TRUE(), [Orders MoM] > 0, "#178A55", [Orders MoM] < 0, "#D14343", "#66788A")
+		lineageTag: c66ed3e5-af35-443b-96b1-798225aaddb3
+
+	measure 'Units Sold Current Month' =
+			VAR PeriodEnd = [Latest Operational Month]
+			VAR PeriodStart = DATE(YEAR(PeriodEnd), MONTH(PeriodEnd), 1)
+			RETURN CALCULATE([Units Sold], REMOVEFILTERS('Calendar'), DATESBETWEEN('Calendar'[Date], PeriodStart, PeriodEnd))
+		formatString: #,##0
+		lineageTag: 01349e34-5ffa-4134-9460-e33a6d1cdf16
+
+	measure 'Units Sold Previous Month' =
+			VAR PeriodEnd = EOMONTH([Latest Operational Month], -1)
+			VAR PeriodStart = DATE(YEAR(PeriodEnd), MONTH(PeriodEnd), 1)
+			RETURN CALCULATE([Units Sold], REMOVEFILTERS('Calendar'), DATESBETWEEN('Calendar'[Date], PeriodStart, PeriodEnd))
+		formatString: #,##0
+		lineageTag: bff3bc47-e5dd-4a92-ae4f-d04ef9184038
+
+	measure 'Units Sold MoM' = DIVIDE([Units Sold Current Month] - [Units Sold Previous Month], [Units Sold Previous Month])
+		formatString: ▲ 0.0%;▼ 0.0%;• 0.0%
+		lineageTag: 78cf6db1-a518-4154-91a6-e71769d3c487
+
+	measure 'Units Sold MoM Color' = SWITCH(TRUE(), [Units Sold MoM] > 0, "#178A55", [Units Sold MoM] < 0, "#D14343", "#66788A")
+		lineageTag: 3386466d-3ad9-49d4-bc25-3f7b81d8c850
+
+	measure 'Average Order Value Current Month' = DIVIDE([Net Revenue Current Month], [Orders Current Month])
+		formatString: $ #,##0.00
+		lineageTag: 7229817e-0bf4-4289-9f52-2f02de289893
+
+	measure 'Average Order Value Previous Month' = DIVIDE([Net Revenue Previous Month], [Orders Previous Month])
+		formatString: $ #,##0.00
+		lineageTag: 748880d4-620f-48e2-b730-72825a8e665c
+
+	measure 'Average Order Value MoM' = DIVIDE([Average Order Value Current Month] - [Average Order Value Previous Month], [Average Order Value Previous Month])
+		formatString: ▲ 0.0%;▼ 0.0%;• 0.0%
+		lineageTag: 334c84e4-5df0-45fc-8ac5-510c37a045ae
+
+	measure 'Average Order Value MoM Color' = SWITCH(TRUE(), [Average Order Value MoM] > 0, "#178A55", [Average Order Value MoM] < 0, "#D14343", "#66788A")
+		lineageTag: 38b014c1-f74f-4eb3-9d87-6e1a8b60e168
+
+	measure 'Active Clients Current Month' =
+			VAR PeriodEnd = [Latest Operational Month]
+			VAR PeriodStart = DATE(YEAR(PeriodEnd), MONTH(PeriodEnd), 1)
+			RETURN CALCULATE([Active Clients], REMOVEFILTERS('Calendar'), DATESBETWEEN('Calendar'[Date], PeriodStart, PeriodEnd))
+		formatString: #,##0
+		lineageTag: 7f0b2648-549b-469a-9a32-8bf953bba594
+
+	measure 'Active Clients Previous Month' =
+			VAR PeriodEnd = EOMONTH([Latest Operational Month], -1)
+			VAR PeriodStart = DATE(YEAR(PeriodEnd), MONTH(PeriodEnd), 1)
+			RETURN CALCULATE([Active Clients], REMOVEFILTERS('Calendar'), DATESBETWEEN('Calendar'[Date], PeriodStart, PeriodEnd))
+		formatString: #,##0
+		lineageTag: 236e00f7-7bd8-48ad-b02a-e605aae108f5
+
+	measure 'Active Clients MoM' = DIVIDE([Active Clients Current Month] - [Active Clients Previous Month], [Active Clients Previous Month])
+		formatString: ▲ 0.0%;▼ 0.0%;• 0.0%
+		lineageTag: 884646bf-9e40-44ca-a456-ff92262aa608
+
+	measure 'Active Clients MoM Color' = SWITCH(TRUE(), [Active Clients MoM] > 0, "#178A55", [Active Clients MoM] < 0, "#D14343", "#66788A")
+		lineageTag: ac6df18e-ee92-46b8-a50f-30d10f1a2e08
+
+	measure 'Weighted Discount Rate Current Month' =
+			VAR PeriodEnd = [Latest Operational Month]
+			VAR PeriodStart = DATE(YEAR(PeriodEnd), MONTH(PeriodEnd), 1)
+			RETURN CALCULATE([Weighted Discount Rate], REMOVEFILTERS('Calendar'), DATESBETWEEN('Calendar'[Date], PeriodStart, PeriodEnd))
+		formatString: 0.0%
+		lineageTag: 936fa337-0867-4dde-8311-77a33bbd3c38
+
+	measure 'Weighted Discount Rate Previous Month' =
+			VAR PeriodEnd = EOMONTH([Latest Operational Month], -1)
+			VAR PeriodStart = DATE(YEAR(PeriodEnd), MONTH(PeriodEnd), 1)
+			RETURN CALCULATE([Weighted Discount Rate], REMOVEFILTERS('Calendar'), DATESBETWEEN('Calendar'[Date], PeriodStart, PeriodEnd))
+		formatString: 0.0%
+		lineageTag: 1a8de5bb-7932-42ef-b301-df3baa90bd44
+
+	measure 'Weighted Discount Rate MoM' = DIVIDE([Weighted Discount Rate Current Month] - [Weighted Discount Rate Previous Month], [Weighted Discount Rate Previous Month])
+		formatString: ▲ 0.0%;▼ 0.0%;• 0.0%
+		lineageTag: 033d3b31-9836-4e37-8b56-c73ffa0a9100
+
+	measure 'Weighted Discount Rate MoM Color' = SWITCH(TRUE(), [Weighted Discount Rate MoM] < 0, "#178A55", [Weighted Discount Rate MoM] > 0, "#D14343", "#66788A")
+		lineageTag: 3590e81b-720e-4edc-90fe-ddb9a87d68ee
+
+	/// Available units reported by the product catalog in the current product context.
+	measure 'Current Stock' = MIN('Products'[StockUnits])
+		formatString: #,##0
+		displayFolder: Inventory
+
+	/// Demonstration replenishment target: 25% demand buffer with a minimum of 10 units.
+	measure 'Target Stock' = MAX(10, ROUNDUP([Units Sold] * 1.25, 0))
+		formatString: #,##0
+		displayFolder: Inventory
+
+	/// Units required to reach the demonstration stock target; never returns a negative value.
+	measure 'Reorder Qty' = MAX(0, [Target Stock] - [Current Stock])
+		formatString: #,##0
+		displayFolder: Inventory
+
+	/// Action-oriented inventory classification based on current stock compared with the documented target.
+	measure 'Stock Status' = SWITCH(TRUE(), [Current Stock] = 0, "Out of Stock", [Current Stock] < [Target Stock], "Low Stock", "Healthy")
+		formatString: General
+		displayFolder: Inventory
+
+	/// Hex color used to emphasize the action priority of Stock Status in report tables.
+	measure 'Stock Status Color' = SWITCH([Stock Status], "Out of Stock", "#D14343", "Low Stock", "#B26A00", "#178A55")
+		formatString: General
+		displayFolder: Inventory
+		isHidden
+
+	column CartId
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: bee00e1c-5e25-45f7-baa0-e44b24da4fe7
+		summarizeBy: none
+		sourceColumn: CartId
+
+	column ProductId
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: fe86bfbf-ffac-4f13-ae3c-c7e18a1e8e79
+		summarizeBy: none
+		sourceColumn: ProductId
+
+	column ProductName
+		dataType: string
+		isHidden
+		lineageTag: cfd2fb48-3ef5-4d59-8781-62a826b7fc8e
+		summarizeBy: none
+		sourceColumn: ProductName
+
+	column UnitPrice
+		dataType: double
+		isHidden
+		lineageTag: 3e752b87-00f8-4bf9-ac91-356346591102
+		summarizeBy: sum
+		sourceColumn: UnitPrice
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Quantity
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 6afbba87-0818-44ef-9b7c-5e2448ee7cb1
+		summarizeBy: sum
+		sourceColumn: Quantity
+
+	column GrossRevenue
+		dataType: double
+		isHidden
+		lineageTag: 6df349ad-fdd2-4007-9835-9551ebf232e1
+		summarizeBy: sum
+		sourceColumn: GrossRevenue
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DiscountPct
+		dataType: double
+		isHidden
+		lineageTag: 59ca8348-26f2-419d-bd06-92dcf3db7845
+		summarizeBy: average
+		sourceColumn: DiscountPct
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column NetRevenue
+		dataType: double
+		isHidden
+		lineageTag: 5b603eb4-9a7c-4c3c-a186-2e349c0d1e7b
+		summarizeBy: sum
+		sourceColumn: NetRevenue
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ClientId
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: b17fab4b-f9db-417e-ba4d-23f29d3ccae0
+		summarizeBy: none
+		sourceColumn: ClientId
+
+	column CartGrossTotal
+		dataType: double
+		isHidden
+		lineageTag: d73d2308-dcff-4f0b-9597-ef6438fd5734
+		summarizeBy: sum
+		sourceColumn: CartGrossTotal
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column CartNetTotal
+		dataType: double
+		isHidden
+		lineageTag: cc28bb1a-35d9-46dd-96c0-02d14e14262c
+		summarizeBy: sum
+		sourceColumn: CartNetTotal
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column CartProductCount
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: edcd890f-c0d4-4180-a8eb-abaedb988351
+		summarizeBy: sum
+		sourceColumn: CartProductCount
+
+	column CartQuantity
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: c9dfee71-c293-4185-8fab-7aa923db93be
+		summarizeBy: sum
+		sourceColumn: CartQuantity
+
+	column total
+		dataType: string
+		isHidden
+		lineageTag: c7ed66fc-9429-4998-bc3c-06dc9f7cfd55
+		summarizeBy: none
+		sourceColumn: total
+
+		annotation SummarizationSetBy = Automatic
+
+	column skip
+		dataType: string
+		isHidden
+		lineageTag: 2238f7ee-5600-4aef-8244-b3cff4ff4f11
+		summarizeBy: none
+		sourceColumn: skip
+
+		annotation SummarizationSetBy = Automatic
+
+	column limit
+		dataType: string
+		isHidden
+		lineageTag: 88ad4120-bf37-44f2-9346-831f090c07f4
+		summarizeBy: none
+		sourceColumn: limit
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrderDate
+		dataType: dateTime
+		isHidden
+		formatString: Short Date
+		lineageTag: 22be40f5-42bc-4b3b-a01f-a74bd39f1067
+		summarizeBy: none
+		sourceColumn: OrderDate
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition SalesLines = m
+		mode: import
+		source =
+				let
+				  Source = Json.Document(Web.Contents("https://dummyjson.com/carts?limit=0")),
+				  ConvertedToTable = Table.FromRecords({Source}),
+				  ExpandedCarts = Table.ExpandListColumn(ConvertedToTable, "carts"),
+				  ExpandedCartFields = Table.ExpandRecordColumn(ExpandedCarts, "carts", {"id", "products", "total", "discountedTotal", "userId", "totalProducts", "totalQuantity"}, {"CartId", "products", "CartGrossTotal", "CartNetTotal", "ClientId", "CartProductCount", "CartQuantity"}),
+				  ExpandedProducts = Table.ExpandListColumn(ExpandedCartFields, "products"),
+				  ExpandedLineFields = Table.ExpandRecordColumn(ExpandedProducts, "products", {"id", "title", "price", "quantity", "total", "discountPercentage", "discountedTotal"}, {"ProductId", "ProductName", "UnitPrice", "Quantity", "GrossRevenue", "DiscountPct", "NetRevenue"}),
+				  ChangedTypes = Table.TransformColumnTypes(ExpandedLineFields, {{"CartId", Int64.Type}, {"ProductId", Int64.Type}, {"ProductName", type text}, {"UnitPrice", type number}, {"Quantity", Int64.Type}, {"GrossRevenue", type number}, {"DiscountPct", type number}, {"NetRevenue", type number}, {"ClientId", Int64.Type}, {"CartGrossTotal", type number}, {"CartNetTotal", type number}, {"CartProductCount", Int64.Type}, {"CartQuantity", Int64.Type}}),
+				  AddedOrderDate = Table.AddColumn(ChangedTypes, "OrderDate", each Date.AddDays(#date(2025, 1, 1), Number.Mod(([CartId] - 1) * 37, 365)), type date)
+				in
+				  AddedOrderDate
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

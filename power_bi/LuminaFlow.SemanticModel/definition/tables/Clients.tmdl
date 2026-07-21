@@ -1,0 +1,142 @@
+table Clients
+	lineageTag: a9b1e15b-c19c-4336-a124-f52debc5d6ab
+
+	column ClientId
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 4ab22682-37d9-4996-b089-46d0a4344fbe
+		summarizeBy: none
+		sourceColumn: ClientId
+
+	column FirstName
+		dataType: string
+		isHidden
+		lineageTag: b7e4df81-6935-4ec1-951f-7548c8174351
+		summarizeBy: none
+		sourceColumn: FirstName
+
+	column LastName
+		dataType: string
+		isHidden
+		lineageTag: 38966166-1289-4b0b-b8cd-9a4fe5c671f8
+		summarizeBy: none
+		sourceColumn: LastName
+
+	column FullName
+		dataType: string
+		isHidden
+		lineageTag: 07ff3710-d782-467a-877f-ae17cc028392
+		summarizeBy: none
+		sourceColumn: FullName
+
+	column Age
+		dataType: int64
+		formatString: 0
+		lineageTag: c8aa5e1d-3c0e-4718-b886-d5dfc7473e5d
+		summarizeBy: none
+		sourceColumn: Age
+
+	column Gender
+		dataType: string
+		lineageTag: db4725fe-a00e-40b3-9bfd-316fb337ca0a
+		summarizeBy: none
+		sourceColumn: Gender
+
+	column Email
+		dataType: string
+		isHidden
+		lineageTag: e7eb4316-6db5-4dfa-b605-4b87e87122ea
+		summarizeBy: none
+		sourceColumn: Email
+
+	column Phone
+		dataType: string
+		isHidden
+		lineageTag: 5e79a3ce-67f1-4373-a7d9-a28af5f85089
+		summarizeBy: none
+		sourceColumn: Phone
+
+	column City
+		dataType: string
+		lineageTag: a96257c7-765a-40a7-a109-b3ed7a01077a
+		summarizeBy: none
+		sourceColumn: City
+
+	column State
+		dataType: string
+		lineageTag: 3698aacb-bd4e-4408-8ff0-a98d485ed3e1
+		summarizeBy: none
+		sourceColumn: State
+
+	column Country
+		dataType: string
+		lineageTag: 7b6bbd40-3626-439e-b311-661d3ceb2caf
+		summarizeBy: none
+		sourceColumn: Country
+
+	column CompanyName
+		dataType: string
+		lineageTag: 9a7cd2f4-8851-45fe-b2b4-0193314a148e
+		summarizeBy: none
+		sourceColumn: CompanyName
+
+	column Department
+		dataType: string
+		lineageTag: 026f6e8d-edbe-4256-a601-de4338f8c29f
+		summarizeBy: none
+		sourceColumn: Department
+
+	column Role
+		dataType: string
+		lineageTag: e270e683-23dd-4ee8-ac03-e70990d9c722
+		summarizeBy: none
+		sourceColumn: Role
+
+	column total
+		dataType: string
+		isHidden
+		lineageTag: ccb1b088-80ac-43d6-b09f-42745d87c5b9
+		summarizeBy: none
+		sourceColumn: total
+
+		annotation SummarizationSetBy = Automatic
+
+	column skip
+		dataType: string
+		isHidden
+		lineageTag: c2b25df1-320e-432b-ac89-c1eb1371c822
+		summarizeBy: none
+		sourceColumn: skip
+
+		annotation SummarizationSetBy = Automatic
+
+	column limit
+		dataType: string
+		isHidden
+		lineageTag: a1a2fb6a-5d54-4f34-afd0-a6f39ec36cd1
+		summarizeBy: none
+		sourceColumn: limit
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Clients = m
+		mode: import
+		source =
+				let
+				  Source = Json.Document(Web.Contents("https://dummyjson.com/users?limit=0")),
+				  ConvertedToTable = Table.FromRecords({Source}),
+				  ExpandedUsers = Table.ExpandListColumn(ConvertedToTable, "users"),
+				  ExpandedUserFields = Table.ExpandRecordColumn(ExpandedUsers, "users", {"id", "firstName", "lastName", "age", "gender", "email", "phone", "address", "company", "role"}, {"ClientId", "FirstName", "LastName", "Age", "Gender", "Email", "Phone", "address", "company", "Role"}),
+				  ExpandedAddress = Table.ExpandRecordColumn(ExpandedUserFields, "address", {"city", "state", "country"}, {"City", "State", "Country"}),
+				  ExpandedCompany = Table.ExpandRecordColumn(ExpandedAddress, "company", {"department", "name"}, {"Department", "CompanyName"}),
+				  AddedFullName = Table.AddColumn(ExpandedCompany, "FullName", each Text.Combine({[FirstName], [LastName]}, " "), type text),
+				  ReorderedColumns = Table.ReorderColumns(AddedFullName, {"ClientId", "FirstName", "LastName", "FullName", "Age", "Gender", "Email", "Phone", "City", "State", "Country", "CompanyName", "Department", "Role"}),
+				  ChangedTypes = Table.TransformColumnTypes(ReorderedColumns, {{"ClientId", Int64.Type}, {"FirstName", type text}, {"LastName", type text}, {"FullName", type text}, {"Age", Int64.Type}, {"Gender", type text}, {"Email", type text}, {"Phone", type text}, {"City", type text}, {"State", type text}, {"Country", type text}, {"CompanyName", type text}, {"Department", type text}, {"Role", type text}})
+				in
+				  ChangedTypes
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

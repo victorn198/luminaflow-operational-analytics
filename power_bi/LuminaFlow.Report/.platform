@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "LuminaFlow Operational Analytics"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "713caa5f-00f4-44d9-a28d-b442ad838b47"
+  }
+}

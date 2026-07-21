@@ -1,0 +1,50 @@
+table Calendar
+	lineageTag: 2fc1a845-e046-456c-a6c7-5f6a78649a7e
+
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: Short Date
+		lineageTag: 1ac8c7c6-dfb6-4a53-a234-219aeb9ad09b
+		dataCategory: PaddedDateTableDates
+		summarizeBy: none
+		sourceColumn: [Date]
+
+	column Year = YEAR([Date])
+		dataType: int64
+		formatString: 0
+		lineageTag: 3047db7f-2d73-4cc5-9205-181adad360ba
+		summarizeBy: none
+
+	column MonthNo = MONTH([Date])
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 2941085d-4ebf-4c50-b907-73687260d94b
+		summarizeBy: none
+
+	column Month = FORMAT([Date], "MMM")
+		dataType: string
+		lineageTag: ebac014c-5444-4f82-bac9-9b611ac1798b
+		summarizeBy: none
+		sortByColumn: MonthNo
+
+	column 'Month Label' = FORMAT([Date], "MMM yyyy")
+		dataType: string
+		lineageTag: 4747196f-39a1-46db-85d4-d24d729524c8
+		summarizeBy: none
+		sortByColumn: 'Month Sort'
+
+	column 'Month Sort' = YEAR([Date]) * 100 + MONTH([Date])
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: da7ddb30-51df-46c0-9f19-95619fb11dc7
+		summarizeBy: none
+
+	partition Calendar = calculated
+		mode: import
+		source = CALENDAR(DATE(2025, 1, 1), DATE(2025, 12, 31))
+
+	annotation __PBI_TemplateDateTable = true
+

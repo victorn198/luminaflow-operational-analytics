@@ -1,0 +1,30 @@
+# Power BI local state and binary exports
+**/.pbi/
+**/cache.abf
+**/localSettings.json
+*.pbix
+*.pbit
+
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+
+# Tooling
+node_modules/
+__pycache__/
+*.pyc
+.pytest_cache/
+.powerbi-workflow/backups/
+.powerbi-workflow/validation-output.json
+
+# Private authoring workflow (not part of the public portfolio narrative)
+.powerbi-workflow/
+_brief/
+tools/powerbi-workflow.cmd
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

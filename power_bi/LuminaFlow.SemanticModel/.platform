@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "LuminaFlow Operational Analytics Model"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "d0a114f2-3130-4f3d-a89b-005505ad94a7"
+  }
+}

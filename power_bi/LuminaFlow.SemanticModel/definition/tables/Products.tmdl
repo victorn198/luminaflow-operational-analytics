@@ -1,0 +1,122 @@
+table Products
+	lineageTag: 461bb6d1-bd25-41c0-a10a-4afe3c6d6698
+
+	column ProductId
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: f4381f5e-8f5c-4778-ae0e-b835310fd543
+		summarizeBy: none
+		sourceColumn: ProductId
+
+	column 'Product Name'
+		dataType: string
+		lineageTag: 8d9f744d-1e90-4e76-88df-6f4f193a4205
+		summarizeBy: none
+		sourceColumn: ProductName
+
+	column Description
+		dataType: string
+		lineageTag: ee2a1386-5b66-4c45-a4ed-e4e37c4c97ff
+		summarizeBy: none
+		sourceColumn: Description
+
+	column Category
+		dataType: string
+		lineageTag: 62675595-b1de-4dc7-a70c-cb7b67f20f14
+		summarizeBy: none
+		sourceColumn: Category
+
+	column Brand
+		dataType: string
+		lineageTag: 9131e159-bd63-4742-a432-d7dbcb8c9a0c
+		summarizeBy: none
+		sourceColumn: Brand
+
+	column UnitPrice
+		dataType: double
+		lineageTag: d9b7eaed-af43-4d84-8685-d0e3b18de9eb
+		summarizeBy: sum
+		sourceColumn: UnitPrice
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DiscountPct
+		dataType: double
+		lineageTag: 0c578870-bbf2-40f9-84fa-b0bac6ec9475
+		summarizeBy: average
+		sourceColumn: DiscountPct
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Rating
+		dataType: double
+		lineageTag: 62c9445f-78b8-4747-b251-45d3c7969234
+		summarizeBy: average
+		sourceColumn: Rating
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column StockUnits
+		dataType: int64
+		formatString: 0
+		lineageTag: 41c9005a-c04f-4f22-a0fb-2b68dc73362a
+		summarizeBy: sum
+		sourceColumn: StockUnits
+
+	column AvailabilityStatus
+		dataType: string
+		lineageTag: c761c986-b9f0-43ff-b09a-ec53c8af4349
+		summarizeBy: none
+		sourceColumn: AvailabilityStatus
+
+	column MinOrderQty
+		dataType: int64
+		formatString: 0
+		lineageTag: 2b846162-a756-4356-83a3-74c504f3cb59
+		summarizeBy: sum
+		sourceColumn: MinOrderQty
+
+	column total
+		dataType: string
+		isHidden
+		lineageTag: 52c65c1a-2915-4830-a050-b9eaa995b748
+		summarizeBy: none
+		sourceColumn: total
+
+		annotation SummarizationSetBy = Automatic
+
+	column skip
+		dataType: string
+		isHidden
+		lineageTag: 5e4140a2-f441-4ae2-9b72-19d6d948c28b
+		summarizeBy: none
+		sourceColumn: skip
+
+		annotation SummarizationSetBy = Automatic
+
+	column limit
+		dataType: string
+		isHidden
+		lineageTag: 26f95874-885c-42de-8b66-f15c24f853ed
+		summarizeBy: none
+		sourceColumn: limit
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Products = m
+		mode: import
+		source =
+				let
+				  Source = Json.Document(Web.Contents("https://dummyjson.com/products?limit=0"), 65001),
+				  ConvertedToTable = Table.FromRecords({Source}),
+				  ExpandedProducts = Table.ExpandListColumn(ConvertedToTable, "products"),
+				  ExpandedProductFields = Table.ExpandRecordColumn(ExpandedProducts, "products", {"id", "title", "description", "category", "price", "discountPercentage", "rating", "stock", "brand", "availabilityStatus", "minimumOrderQuantity"}, {"ProductId", "ProductName", "Description", "Category", "UnitPrice", "DiscountPct", "Rating", "StockUnits", "Brand", "AvailabilityStatus", "MinOrderQty"}),
+				  ChangedTypes = Table.TransformColumnTypes(ExpandedProductFields, {{"ProductId", Int64.Type}, {"ProductName", type text}, {"Description", type text}, {"Category", type text}, {"Brand", type text}, {"UnitPrice", type number}, {"DiscountPct", type number}, {"Rating", type number}, {"StockUnits", Int64.Type}, {"AvailabilityStatus", type text}, {"MinOrderQty", Int64.Type}})
+				in
+				  ChangedTypes
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,120 @@
+{
+  "name": "FrutigerAero-7c2e91ab.json",
+  "dataColors": [
+    "#2d9cdb",
+    "#32c8b4",
+    "#73d2ff",
+    "#8fd3a6",
+    "#6c9ff8",
+    "#56b4e9",
+    "#a0e8ff",
+    "#5ac8fa"
+  ],
+  "good": "#34c759",
+  "neutral": "#7aa7b8",
+  "bad": "#ff6b81",
+  "maximum": "#2d9cdb",
+  "center": "#7dd9ff",
+  "minimum": "#ebfbff",
+  "null": "#b7d9e8",
+  "foreground": "#184b5d",
+  "background": "#f8feff",
+  "tableAccent": "#6ecff6",
+  "textClasses": {
+    "callout": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 28,
+      "color": "#184b5d"
+    },
+    "title": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 12,
+      "color": "#1d5d73"
+    },
+    "header": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 12,
+      "color": "#1d5d73"
+    },
+    "label": {
+      "fontFace": "Segoe UI",
+      "fontSize": 10,
+      "color": "#386576"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "title": [
+          {
+            "show": true,
+            "fontFamily": "Segoe UI Semibold",
+            "fontSize": 12,
+            "fontColor": {
+              "solid": {
+                "color": "#1d5d73"
+              }
+            }
+          }
+        ],
+        "background": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "transparency": 8
+          }
+        ],
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#7fd7f5"
+              }
+            },
+            "radius": 18,
+            "width": 1
+          }
+        ],
+        "visualHeader": [
+          {
+            "show": false
+          }
+        ]
+      }
+    },
+    "tableEx": {
+      "*": {
+        "columnHeaders": [
+          {
+            "autoSizeColumnWidth": true,
+            "columnAdjustment": "growToFit",
+            "fontColor": {
+              "solid": {
+                "color": "#184b5d"
+              }
+            },
+            "backColor": {
+              "solid": {
+                "color": "#dff7ff"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "cardVisual": {
+      "*": {
+        "title": [
+          {
+            "show": false
+          }
+        ]
+      }
+    }
+  }
+}
