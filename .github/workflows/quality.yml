@@ -1,0 +1,16 @@
+name: Portfolio quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check report builder syntax
+        run: node --check scripts/build_luminaflow_powerbi.mjs
+      - name: Validate versionable Power BI artifacts
+        run: node scripts/validate_portfolio.mjs

@@ -1,94 +1,102 @@
-# LuminaFlow Operational Analytics
+<p align="center">
+  <img src="assets/luminaflow-logo.svg" width="190" alt="LuminaFlow">
+</p>
 
-[English](README.md) | [Português](README.pt-BR.md)
+<h1 align="center">LuminaFlow Operational Analytics</h1>
 
-Case de portfólio em Power BI para desempenho comercial e priorização de estoque. O relatório transforma dados sintéticos de uma API pública em modelo semântico governado e visão executiva orientada a decisões.
+<p align="center">
+  Produto de decisão em Power BI para desempenho comercial e reposição de estoque.
+</p>
 
-![Visão operacional](assets/screenshots/operational-overview.png)
+<p align="center">
+  <a href="README.md">English</a>
+  · <a href="power_bi/LuminaFlow.pbip"><strong>Abrir fonte PBIP</strong></a>
+  · <a href="docs/metrics.md">Dicionário de métricas</a>
+  · <a href="docs/decisions-and-limitations.md">Decisões e limitações</a>
+</p>
 
-## Problema de negócio
+![Visão operacional LuminaFlow](assets/screenshots/operational-overview.png)
 
-Gestores comerciais e operacionais precisam entender, em uma única tela, a concentração de receita e os produtos que exigem reposição. A página segue o fluxo:
+## O desafio de negócio
+
+Gestores comerciais e operacionais precisam conectar desempenho de receita aos produtos que exigem reposição. Um dashboard descritivo não basta: o relatório deve mostrar exceções, quantificar a lacuna e orientar a compra.
+
+A LuminaFlow segue o fluxo:
 
 `Situação -> Exceção -> Causa -> Detalhe -> Ação`
 
-## Perguntas respondidas
+- **Situação:** receita líquida, pedidos, unidades, clientes, ticket e desconto ponderado.
+- **Exceção:** produtos sem estoque ou abaixo de uma meta transparente.
+- **Causa:** concentração por categoria, estado do cliente e produto.
+- **Detalhe:** rankings comerciais e tabela de estoque.
+- **Ação:** quantidade de reposição calculada por produto.
 
-- Qual é a receita líquida, volume de pedidos, unidades vendidas, clientes ativos, ticket médio e desconto ponderado do último período simulado?
-- Quais categorias e estados de clientes concentram receita?
-- Quais produtos lideram receita e volume?
-- Quais produtos estão sem estoque ou abaixo da meta documentada?
+## O que o snapshot aprovado mostra
 
-## Dados e arquitetura
+| Sinal | Implicação para a decisão |
+|---|---|
+| Receita líquida do último período simulado em **$ 295 mil**, alta de **56,3%** | O crescimento é forte, mas o mix precisa ser analisado antes de tratá-lo como melhora generalizada |
+| Desconto ponderado aumentou **23,4%** | O crescimento deve ser avaliado junto com a pressão de desconto |
+| Veículos lideram a receita histórica por categoria | A concentração aumenta a dependência de um grupo restrito |
+| Três produtos visíveis estão sem estoque e vários abaixo da meta | A reposição deve começar pela lacuna calculada, não por um rótulo subjetivo |
 
-O modelo consome os endpoints sintéticos públicos `products`, `users` e `carts` da [DummyJSON](https://dummyjson.com/). O Power Query realiza ingestão e tratamento dentro do projeto PBIP.
+Os valores são resultados DAX do snapshot aprovado, não textos fixos no layout. Uma atualização da API sintética pode alterá-los.
 
-```text
-APIs DummyJSON -> Power Query -> Modelo estrela -> Medidas DAX -> Relatório PBIR
-```
+## Política de decisão de estoque
 
-- `SalesLines`: uma linha por produto dentro de um carrinho.
-- `Products`: uma linha por produto.
-- `Clients`: uma linha por cliente sintético.
-- `Calendar`: datas operacionais simuladas deterministicamente, pois os carrinhos não possuem data transacional.
-
-Consulte o [modelo de dados](docs/data-model.md) e o [dicionário de métricas](docs/metrics.md).
-
-## Política de estoque
-
-A fonte possui estoque atual, mas não fornece previsão, lead time, nível de serviço ou meta oficial. Por isso, o case utiliza uma heurística de demonstração transparente:
+A API fornece estoque atual, mas não possui previsão, lead time, nível de serviço ou meta oficial. O case usa uma heurística de demonstração declarada:
 
 ```text
 Target Stock = max(10, arredondar para cima(Units Sold * 1,25))
 Reorder Qty  = max(0, Target Stock - Current Stock)
 ```
 
-O status é calculado, não escrito manualmente:
+- **Out of Stock:** estoque atual igual a zero.
+- **Low Stock:** estoque atual abaixo da meta.
+- **Healthy:** estoque atual igual ou superior à meta.
 
-- `Out of Stock`: estoque atual igual a zero.
-- `Low Stock`: estoque atual abaixo da meta.
-- `Healthy`: estoque atual igual ou superior à meta.
+A heurística é identificada como lógica de portfólio e nunca como política fornecida pela fonte.
 
-## Execução local
+## Modelo de dados
 
-1. Instale o Power BI Desktop com suporte a PBIP/PBIR habilitado.
-2. Abra `power_bi/LuminaFlow.pbip`.
-3. Autorize o acesso a `https://dummyjson.com` quando solicitado.
-4. Atualize o modelo e abra `Operational Overview`.
+```mermaid
+erDiagram
+    CALENDAR ||--o{ SALES_LINES : filtra
+    CLIENTS ||--o{ SALES_LINES : compra
+    PRODUCTS ||--o{ SALES_LINES : contem
+```
 
-A imagem incluída documenta o snapshot aprovado. Atualizações da API podem alterar os valores.
+`DummyJSON products + users + carts -> Power Query -> modelo estrela -> medidas DAX -> relatório PBIR`
 
-## Controles de qualidade
+Consulte o [modelo completo](docs/data-model.md) e o [dicionário de métricas](docs/metrics.md).
 
-- Medidas DAX explícitas para os KPIs visíveis.
-- Relacionamentos unidirecionais das dimensões para a tabela fato.
-- Reconciliação entre receita bruta, desconto e receita líquida.
-- Nenhum KPI ou percentual comparativo escrito diretamente no layout.
-- Atributos pessoais sintéticos permanecem ocultos para consumidores do relatório.
-- Bookmark de reset restrito aos slicers; a ordenação pertence aos próprios visuais.
-- Validação PBIR e inspeção no Power BI Desktop concluídas antes da aprovação.
+## Evidências de engenharia
+
+- PBIP, PBIR e TMDL são a fonte canônica versionável; PBIX não é usado para autoria.
+- Power Query consome e trata três endpoints sintéticos públicos.
+- Relacionamentos unidirecionais ligam dimensões à fato de linhas de venda.
+- KPIs e comparações visíveis usam medidas DAX explícitas.
+- Receita bruta, desconto e receita líquida são reconciliados.
+- O bookmark de reset afeta slicers sem destruir a ordenação dos visuais.
+- Atributos pessoais sintéticos permanecem ocultos para consumidores.
+- Validação automática verifica JSON, referências PBIP, TMDL e caches proibidos.
+
+## Abrir localmente
+
+1. Instale o Power BI Desktop com suporte a PBIP/PBIR.
+2. Clone este repositório.
+3. Abra [`power_bi/LuminaFlow.pbip`](power_bi/LuminaFlow.pbip).
+4. Autorize `https://dummyjson.com` e atualize o modelo.
+5. Abra **Operational Overview** e teste filtros e reset.
 
 ## Limitações
 
 - DummyJSON contém dados sintéticos, não transações empresariais.
-- As datas operacionais são simulações determinísticas e não representam cronologia real.
-- A moeda permanece `$`, pois a fonte não declara BRL.
-- Margem, custo de compra, lead time, nível de serviço, devoluções e previsão de demanda não estão disponíveis.
-- A meta de estoque é uma heurística documentada de portfólio, não uma política de produção.
-
-## Estrutura
-
-```text
-power_bi/   Fontes versionáveis PBIP, PBIR e TMDL
-scripts/    Gerador determinístico do relatório
-docs/       Modelo, métricas, decisões e limitações
-assets/     Captura aprovada do portfólio
-```
-
-## Resumo para entrevista
-
-O case demonstra levantamento de requisitos, ingestão com Power Query, modelagem dimensional, governança DAX, formatação condicional, desenho de exceções de estoque, versionamento PBIR e QA visual. A principal decisão foi priorizar comparações acionáveis de estoque em vez de atributos descritivos que não orientam reposição.
+- Datas operacionais são simulações determinísticas porque os carrinhos não possuem data.
+- A moeda permanece `$`; a fonte não declara BRL.
+- Margem, custo de compra, lead time, devoluções, nível de serviço e previsão não estão disponíveis.
+- A meta de estoque é uma heurística documentada, não política de produção.
 
 ## Licença
 
-O código e os materiais autorais usam licença MIT. Os dados retornados pela API permanecem sujeitos aos termos da fonte.
+O código e os materiais autorais usam licença MIT. Os dados da API permanecem sujeitos aos termos da fonte.

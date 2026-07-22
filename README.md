@@ -1,94 +1,120 @@
-# LuminaFlow Operational Analytics
+<p align="center">
+  <img src="assets/luminaflow-logo.svg" width="190" alt="LuminaFlow">
+</p>
 
-[English](README.md) | [Português](README.pt-BR.md)
+<h1 align="center">LuminaFlow Operational Analytics</h1>
 
-An operational Power BI portfolio case for commercial performance and inventory prioritization. The report turns synthetic public API data into a governed semantic model and a decision-oriented executive overview.
+<p align="center">
+  A Power BI decision product for commercial performance and inventory replenishment.
+</p>
 
-![Operational Overview](assets/screenshots/operational-overview.png)
+<p align="center">
+  <a href="README.pt-BR.md">Português</a>
+  · <a href="power_bi/LuminaFlow.pbip"><strong>Open PBIP source</strong></a>
+  · <a href="docs/metrics.md">Metric dictionary</a>
+  · <a href="docs/decisions-and-limitations.md">Decision log</a>
+</p>
 
-## Business problem
+<p align="center">
+  <a href="https://github.com/victorn198/luminaflow-operational-analytics/actions/workflows/quality.yml"><img alt="Portfolio quality" src="https://github.com/victorn198/luminaflow-operational-analytics/actions/workflows/quality.yml/badge.svg"></a>
+  <img alt="Power BI" src="https://img.shields.io/badge/Power%20BI-PBIP%20%7C%20PBIR-F2C811?logo=powerbi&logoColor=111">
+  <img alt="DAX" src="https://img.shields.io/badge/DAX-governed%20measures-12346B">
+  <img alt="Power Query" src="https://img.shields.io/badge/Power%20Query-public%20API-0B6BDC">
+</p>
 
-Commercial and operations managers need one screen to understand revenue concentration, compare commercial segments, and identify products requiring replenishment. The page follows a decision path:
+![LuminaFlow Operational Overview](assets/screenshots/operational-overview.png)
+
+## The business challenge
+
+Commercial and operations managers need one view that connects revenue performance to the products requiring replenishment. A descriptive sales dashboard is not enough: the report must expose exceptions, quantify the gap, and support a restocking decision.
+
+LuminaFlow follows this decision chain:
 
 `Situation -> Exception -> Cause -> Detail -> Action`
 
-## What the dashboard answers
+- **Situation:** net revenue, orders, units, active clients, average order value, and weighted discount.
+- **Exception:** products out of stock or below a transparent target.
+- **Cause:** concentration by category, client state, and product.
+- **Detail:** ranked commercial and inventory tables.
+- **Action:** reorder quantity calculated for each product.
 
-- What is the latest simulated-period net revenue, order volume, units sold, active client count, average order value, and weighted discount rate?
-- Which categories and client states concentrate net revenue?
-- Which products lead revenue and volume?
-- Which products are out of stock or below the documented replenishment target?
+## What the approved snapshot shows
 
-## Data and architecture
+| Signal | Decision implication |
+|---|---|
+| Latest simulated-period net revenue is **$295K**, up **56.3%** | Growth is strong, but the product mix must be checked before treating it as broad-based improvement |
+| Weighted discount increased **23.4%** | Revenue growth should be evaluated together with discount pressure |
+| Vehicle is the leading full-history revenue category | Commercial concentration increases dependency on a narrow product group |
+| Three visible products are out of stock and several are below target | Replenishment should start with the calculated shortage, not a subjective status label |
 
-The model consumes the public synthetic endpoints `products`, `users`, and `carts` from [DummyJSON](https://dummyjson.com/). Power Query performs ingestion and shaping inside the PBIP project.
+Values are DAX results from the approved snapshot, not numbers embedded in the report layout. Refreshing the public synthetic API may change them.
 
-```text
-DummyJSON APIs -> Power Query -> Star schema -> DAX measures -> PBIR report
-```
+## Inventory decision policy
 
-- `SalesLines`: one row per product line inside a cart.
-- `Products`: one row per product.
-- `Clients`: one row per synthetic client.
-- `Calendar`: deterministic simulated operational dates because carts do not include transaction dates.
-
-See [data model](docs/data-model.md) and [metric dictionary](docs/metrics.md).
-
-## Inventory policy
-
-The source has current stock but no forecast, lead time, service level, or official target. The portfolio therefore uses a transparent demonstration heuristic:
+The API provides current stock but no forecast, lead time, service level, or official target. The report therefore uses a disclosed demonstration heuristic:
 
 ```text
 Target Stock = max(10, round up(Units Sold * 1.25))
 Reorder Qty  = max(0, Target Stock - Current Stock)
 ```
 
-Status is calculated, not hardcoded:
+- **Out of Stock:** current stock equals zero.
+- **Low Stock:** current stock is below target.
+- **Healthy:** current stock meets or exceeds target.
 
-- `Out of Stock`: current stock equals zero.
-- `Low Stock`: current stock is below target.
-- `Healthy`: current stock meets or exceeds target.
+The heuristic is labeled as portfolio logic and is never presented as a source-provided policy.
 
-## Run locally
+## Data model
 
-1. Install Power BI Desktop with PBIP/PBIR preview support enabled.
-2. Open `power_bi/LuminaFlow.pbip`.
-3. Allow access to `https://dummyjson.com` when prompted.
-4. Refresh the model and open `Operational Overview`.
+```mermaid
+erDiagram
+    CALENDAR ||--o{ SALES_LINES : filters
+    CLIENTS ||--o{ SALES_LINES : purchases
+    PRODUCTS ||--o{ SALES_LINES : contains
 
-The included screenshot documents the approved snapshot. API refreshes may change source values.
+    SALES_LINES {
+      string CartId
+      string ProductId
+      string ClientId
+      date OperationalDate
+      int Quantity
+      decimal GrossRevenue
+      decimal DiscountValue
+      decimal NetRevenue
+    }
+```
 
-## Quality controls
+`DummyJSON products + users + carts -> Power Query -> star schema -> DAX measures -> PBIR report`
 
-- Explicit DAX measures for visible KPIs.
-- Single-direction relationships from dimensions to the fact table.
-- Revenue reconciliation between gross revenue, discount value, and net revenue.
-- No KPI values or comparison percentages written directly in the visual layout.
+See the complete [data model](docs/data-model.md) and [metric definitions](docs/metrics.md).
+
+## Engineering evidence
+
+- Versionable PBIP, PBIR, and TMDL are the canonical source; PBIX is not used for authoring.
+- Power Query ingests and shapes three public synthetic endpoints.
+- Single-direction relationships run from dimensions to the sales-line fact.
+- Visible KPIs and comparisons use explicit DAX measures.
+- Gross revenue, discount value, and net revenue are reconciled.
+- Reset bookmarks affect slicers without destroying visual sort ownership.
 - Synthetic personal attributes remain hidden from report consumers.
-- Reset bookmark is restricted to slicers; visual sort order remains owned by each visual.
-- PBIR validation and Power BI Desktop rendering checks completed before portfolio approval.
+- Automated repository checks validate JSON, PBIP references, TMDL presence, and forbidden local cache files.
+
+## Open locally
+
+1. Install Power BI Desktop with PBIP/PBIR support.
+2. Clone this repository.
+3. Open [`power_bi/LuminaFlow.pbip`](power_bi/LuminaFlow.pbip).
+4. Allow access to `https://dummyjson.com` and refresh the model.
+5. Open **Operational Overview** and test filters plus the reset bookmark.
 
 ## Limitations
 
-- DummyJSON contains synthetic demonstration data, not company transactions.
-- Operational dates are deterministic simulations and must not be interpreted as real chronology.
-- Currency is displayed as `$` because the source does not declare BRL.
-- Margin, purchasing cost, lead time, service level, returns, and demand forecasting are unavailable.
-- The inventory target is a documented portfolio heuristic, not a production replenishment policy.
-
-## Repository structure
-
-```text
-power_bi/   Versionable PBIP, PBIR, and TMDL source
-scripts/    Deterministic report builder
-docs/       Data model, metrics, decisions, and limitations
-assets/     Approved portfolio screenshot
-```
-
-## Interview summary
-
-This case demonstrates requirements framing, Power Query ingestion, dimensional modeling, DAX governance, conditional formatting, inventory exception design, PBIR source control, and visual QA. The main design decision was to favor actionable stock comparisons over descriptive fields that do not support replenishment decisions.
+- DummyJSON provides synthetic demonstration data, not company transactions.
+- Operational dates are deterministic simulations because carts have no transaction dates.
+- Currency remains `$`; the source does not declare BRL.
+- Margin, purchasing cost, lead time, returns, service level, and demand forecast are unavailable.
+- The inventory target is a documented heuristic, not a production replenishment policy.
 
 ## License
 
-Repository code and authored assets are available under the MIT License. Third-party API data remains subject to the source terms.
+Repository code and authored assets use the MIT License. Third-party API data remains subject to the source terms.
